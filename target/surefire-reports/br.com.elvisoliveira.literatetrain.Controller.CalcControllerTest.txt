@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: br.com.elvisoliveira.literatetrain.Controller.CalcControllerTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.534 s - in br.com.elvisoliveira.literatetrain.Controller.CalcControllerTest

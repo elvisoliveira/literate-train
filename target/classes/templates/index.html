@@ -1,0 +1,155 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="author" content="Elvis Oliveira">
+	<title>Literate Train</title>
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+	<style type="text/css">
+		div#user-message:empty { display: none }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Literate Train</h1>
+		<p class="lead">Use the info on <em>postman_data.json</em>.</p>
+		<div id="user-message" class="alert alert-secondary" role="alert"></div>
+		<div class="row">
+			<div class="col-md-4" id="user-form">
+				<form action="#">
+					<fieldset class="form-group">
+						<dl>
+							<dt><label for="key">Private Key</label></dt>
+							<dd><input class="form-control" type="text" name="key"/></dd>
+						</dl>
+					</fieldset>
+					<input class="btn btn-primary" type="submit" value="Submit"/>
+				</form>
+			</div>
+			<div class="col-md-4" id="user-new"></div>
+			<div class="col-md-4" id="user-data"></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.3/mustache.min.js"></script>
+	<script type="text/javascript">
+		var key = $("input[name=key]");
+		var data = $("div#user-data");
+		var start = $("div#user-form form");
+		var create = $("div#user-new");
+		var message = $("div#user-message").css({"text-transform" : "capitalize"});
+		$(function() {
+			start.submit(function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				$.ajax({
+					"url": "/user",
+					"method": "GET",
+					"headers": {
+						"Authorization": "Bearer " + key.val()
+					}
+				}).done(function (response) {
+					data.empty();
+					data.append(
+						$(document.createElement("ul")).addClass("list-group")
+					);
+					key.prop('disabled', true);
+					$(response).each(function(i, value) {
+						value.edit = true;
+						value.insert = false;
+						value.action = "edit";
+						value.exclude = true;
+						$.get('user.mustache', function(template) {
+							data.find("ul").append(
+								$(document.createElement("li")).addClass("mb-4").css({"list-style" : "none"}).append(
+									Mustache.to_html(template, value)
+								)
+							);
+						});
+					});
+					$.get('user.mustache', function(template) {
+						var value = {};
+						value.edit = false;
+						value.insert = true;
+						value.action = "create";
+						value.exclude = false
+						create.empty().append(
+							Mustache.to_html(template, value)
+						);
+					});
+				}).fail(function() {
+					message.empty().text("failed to load the users using this key");
+				});
+			});
+			$("div#user-data").on("submit", "form", function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				var method = $(this).find("input[type=submit]:focus").val();
+				switch(method) {
+					case "exclude":
+						method = "DELETE";
+					break;
+					case "edit":
+						method = "PATCH";
+					break;
+					default:
+						method = "PATCH";
+				}
+				var form = $(this);
+				var input = form.parseInput();
+				$.ajax({
+					"url": "/user?id=" + $(this).find("input[name=id]").val(),
+					"method": method,
+					"headers": {
+						"Content-Type": "application/json",
+						"Authorization": "Bearer " + key.val()
+					},
+					"data": JSON.stringify(input)
+				}).done(function (response) {
+					message.empty().text("action executed successfully");
+					if(method == "DELETE") {
+						form.closest("li").remove();
+					}
+				}).fail(function() {
+					message.empty().text("failed to execute action");
+				});
+			});
+			$("div#user-new").on("submit", "form", function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				var input = $(this).parseInput();
+				$.ajax({
+					"url": "/user",
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"Authorization": "Bearer " + key.val()
+					},
+					"data": JSON.stringify(input)
+				}).done(function (response) {
+					message.empty().text("insert executed successfully");
+					start.submit();
+				}).fail(function() {
+					message.empty().text("failed to insert the user");
+				});
+			});
+			$.fn.parseInput = function() {
+				// https://stackoverflow.com/a/25141659
+				var config = {};
+				$(this).serializeArray().map(function(item) {
+					if (config[item.name]) {
+						if (typeof(config[item.name]) === "string") {
+							config[item.name] = [config[item.name]];
+						}
+						config[item.name].push(item.value);
+					} else {
+						config[item.name] = item.value;
+					}
+				});
+				return config;
+			}; 
+		});
+	</script>
+</body>
+</html>

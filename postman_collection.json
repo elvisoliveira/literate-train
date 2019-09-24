@@ -1,0 +1,899 @@
+{
+	"info": {
+		"_postman_id": "537a5bb7-c7e6-4621-a994-3a10340b284e",
+		"name": "Literate Train",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Crypt",
+			"item": [
+				{
+					"name": "Init and Generated random keys",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									"if(data) {",
+									"    pm.environment.set(\"PRIVATEKEY\", data.private);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									"let body = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"PRIVTEMPKEY\", body.privateKey);\r",
+									"postman.setEnvironmentVariable(\"PUBLTEMPKEY\", body.publicKey);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/crypt",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"crypt"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SingleDigit without User",
+			"item": [
+				{
+					"name": "Add SingleDigit",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									"const responseData = pm.response.json()",
+									"pm.environment.set(\"SINGLEDIGITK\", responseData.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"k\": 4,\n\t\"n\": \"9875\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/calc",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"calc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test duplicated SingleDigit",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									"// Since this values were already inserted on the last request",
+									"// check if controller added a new SingleDigit on the cache",
+									"// or if it returned the one that already exists with the same values",
+									"pm.test(\"Check duplicated SingleDigit existence\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.id).to.equal(pm.environment.get(\"SINGLEDIGITK\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"k\": 4,\n\t\"n\": \"9875\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/calc",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"calc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add 20 SingleDigit's",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									"pm.environment.set(\"SINGLEDIGITK\", _.random(1, 500))",
+									"pm.environment.set(\"SINGLEDIGITN\", _.random(1, 500))"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									"// Add 15 to test if memory cache is storing just the last 10",
+									"var body = JSON.parse(responseBody);",
+									"if(body.id < 20) {",
+									"    postman.setNextRequest(\"Add 20 SingleDigit's\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"k\": {{SINGLEDIGITK}},\n\t\"n\": \"{{SINGLEDIGITN}}\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/calc",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"calc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check SingleDigit cache lenght",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									"pm.test(\"SingleDigit count should always be 10\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(10);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/calc",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"calc"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User BREAD",
+			"item": [
+				{
+					"name": "Browse",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "28507d2a-0f54-476a-be0e-f7b66efe846a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "6e2d5ae3-6fea-46c4-9207-b86be70ff1ea",
+								"exec": [
+									"pm.test(\"Check amount of users in he cache\", function () {",
+									"    var data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user/all",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read by ID (User: Elvis)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7ecfe199-13b3-4edb-b5cf-fface9041a95",
+								"exec": [
+									"pm.test(\"Read by ID should return 1 result\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(1);",
+									"});",
+									"pm.test(\"Fields test\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data[0].name).to.eql(\"Elvis Oliveira\");",
+									"    pm.expect(data[0].email).to.eql(\"elvis.olv@gmail.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=0",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add (User: Castro)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3bc33016-bfdc-4dbc-80cc-d5dda5b8755b",
+								"exec": [
+									"// Elvis' Barier token (Private key) shoudn't be able to read Castro's data",
+									"pm.test(\"Encryption Test\", function () {",
+									"    const responseData = pm.response.json();",
+									"    const requestData = JSON.parse(pm.request.body.raw);",
+									"",
+									"    pm.expect(responseData.publicKey).to.equal(requestData.publicKey);",
+									"    pm.expect(responseData.nome).to.not.equal(requestData.name);",
+									"    pm.expect(responseData.email).to.not.equal(requestData.email);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"publicKey\": \"{{PUBLTEMPKEY}}\",\n\t\"name\": \"Castro\",\n\t\"email\": \"castro@test.com.br\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read by ID (User: Castro)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "115e8b75-4e1d-43f9-95fa-94924fc1dbed",
+								"exec": [
+									"pm.test(\"Read by ID should return 1 result\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(1);",
+									"});",
+									"pm.test(\"Fields test\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data[0].name).to.eql(\"Castro\");",
+									"    pm.expect(data[0].email).to.eql(\"castro@test.com.br\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVTEMPKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=1",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Browse (Check Castro's existence)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "28507d2a-0f54-476a-be0e-f7b66efe846a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "0ebad115-2768-472b-a0e8-28d522e97e8e",
+								"exec": [
+									"pm.test(\"Check amount of users in he cache\", function () {",
+									"    var data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVTEMPKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user/all",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit (Add Castro's surname)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVTEMPKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Castro Castro\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=1",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read by ID (Edited User)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7b58ebc4-e33a-42e3-af81-08fca733d468",
+								"exec": [
+									"pm.test(\"Read by ID should return 1 result\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(1);",
+									"});",
+									"pm.test(\"Fields test\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data[0].name).to.eql(\"Castro\");",
+									"    pm.expect(data[0].email).to.eql(\"castro@test.com.br\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVTEMPKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=1",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete (User: Castro)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVTEMPKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=1",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Browse (Check Castro's existence)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "28507d2a-0f54-476a-be0e-f7b66efe846a",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "0ebad115-2768-472b-a0e8-28d522e97e8e",
+								"exec": [
+									"pm.test(\"Check amount of users in he cache\", function () {",
+									"    var data = pm.response.json();",
+									"    pm.expect(data.length).to.eql(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user/all",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user",
+								"all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SingleDigit with User",
+			"item": [
+				{
+					"name": "Add SingleDigit",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5038e2d4-8bc8-4976-8b0b-9fef7e9e7c8c",
+								"exec": [
+									"pm.environment.set(\"SINGLEDIGITK\", _.random(1, 500))",
+									"pm.environment.set(\"SINGLEDIGITN\", _.random(1, 500))"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9529279-26f3-4eab-9484-a87de38d6088",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"k\": {{SINGLEDIGITK}},\n\t\"n\": \"{{SINGLEDIGITN}}\"\n}"
+						},
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/calc",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"calc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check SingleDigits of User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7ecfe199-13b3-4edb-b5cf-fface9041a95",
+								"exec": [
+									"pm.test(\"SingleDigits test\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data[0].singleDigit.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{PRIVATEKEY}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{HOST}}:{{PORT}}/user?id=0",
+							"protocol": "http",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
